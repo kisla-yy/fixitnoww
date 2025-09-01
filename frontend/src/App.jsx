@@ -1,20 +1,27 @@
-import { useEffect, useState } from "react";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+import Navbar from "./components/Navbar";
+import UserLogin from "./components/UserLogin";
+import UserRegister from "./components/UserRegister";
 
 function App() {
-  const [message, setMessage] = useState("Loading...");
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/hello")
-      .then((res) => res.json())
-      .then((data) => setMessage(data.message))
-      .catch((err) => setMessage("❌ Error connecting to backend"));
-  }, []);
-
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Frontend + Backend Test</h1>
-      <p>{message}</p>
-    </div>
+    <Router>
+      <div className="min-h-screen flex flex-col">
+        {/* Navbar visible on all pages */}
+        <Navbar />
+
+        {/* Page Content */}
+        <div className="flex-grow">
+          <Routes>
+            <Route path="/" element={<UserLogin />} />
+            <Route path="/login" element={<UserLogin />} />
+            <Route path="/register" element={<UserRegister />} />
+          </Routes>
+        </div>
+      </div>
+    </Router>
   );
 }
 
