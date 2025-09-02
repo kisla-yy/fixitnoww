@@ -25,7 +25,7 @@ const UserLogin = ({ onLogin }) => {
 
       if (res.data?.user) {
         onLogin(res.data.user); // update App.jsx state
-        navigate("/header");
+        navigate("/user-dashboard");
       } else {
         setErrors(["Server did not return a user object"]);
       }
