@@ -1,7 +1,6 @@
-// src/components/IssueList.jsx
 import React from 'react'
 
-export default function IssueList({ issues = [], activeCategory = 'All Issues' }) {
+export default function IssueList({ issues = [], activeCategory = 'All Issues', onViewMap }) {
   const filtered =
     activeCategory === 'All Issues'
       ? issues
@@ -35,8 +34,19 @@ export default function IssueList({ issues = [], activeCategory = 'All Issues' }
               <p className="mt-2 text-sm text-gray-600">{issue.description}</p>
 
               <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
-                <time dateTime={issue.reportedAt}>{new Date(issue.reportedAt).toLocaleString()}</time>
-                <button className="text-indigo-600 hover:underline text-sm">View</button>
+                <time dateTime={issue.reportedAt}>
+                  {new Date(issue.reportedAt).toLocaleString()}
+                </time>
+
+                {/* call onViewMap and pass the button element so MapModal can restore focus */}
+                <button
+                  className="text-indigo-600 hover:underline text-sm"
+                  onClick={(e) => {
+                    if (typeof onViewMap === 'function') onViewMap(issue, e.currentTarget)
+                  }}
+                >
+                  View
+                </button>
               </div>
             </article>
           ))}
