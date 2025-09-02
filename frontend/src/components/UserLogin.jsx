@@ -1,16 +1,46 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios"; // ✅ import axios
 
-const UserLogin = ({ onSwitch }) => {
+const UserLogin = ({ onLogin }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState([]);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login Data:", formData);
+    setErrors([]);
+
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/signin", // ✅ make sure this route exists
+        formData, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true, 
+      });
+
+      if (res.data?.user) {
+        onLogin(res.data.user); // update App.jsx state
+        navigate("/header");
+      } else {
+        setErrors(["Server did not return a user object"]);
+      }
+    } catch (err) {
+      console.error("Login failed:", err); // ✅ check console for details
+
+      // Show meaningful error from backend if available
+      const payload =
+        err.response?.data?.errors ||
+        err.response?.data?.message ||
+        err.message ||
+        "Something went wrong";
+
+      setErrors(Array.isArray(payload) ? payload : [payload]);
+    }
   };
 
   return (
@@ -19,6 +49,14 @@ const UserLogin = ({ onSwitch }) => {
         <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-6">
           User Login
         </h2>
+
+        {errors.length > 0 && (
+          <ul className="mb-4 text-red-600 list-disc list-inside">
+            {errors.map((err, idx) => (
+              <li key={idx}>{err}</li>
+            ))}
+          </ul>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -60,11 +98,11 @@ const UserLogin = ({ onSwitch }) => {
         </form>
 
         <p className="text-center text-sm mt-4">
-  Don’t have an account?{" "}
-  <Link to="/register" className="text-blue-500 hover:underline">
-    Register
-  </Link>
-</p>
+          Don’t have an account?{" "}
+          <Link to="/register" className="text-blue-500 hover:underline">
+            Register
+          </Link>
+        </p>
       </div>
     </div>
   );

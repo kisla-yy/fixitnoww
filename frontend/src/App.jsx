@@ -18,6 +18,11 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState("All Issues");
   const [isMapOpen, setIsMapOpen] = useState(false);
   const showMapBtnRef = useRef(null);
+    const [user, setUser] = useState(null); // user null = not logged in
+  
+    const handleLogin = (userData) => setUser(userData); // called from Signin/Signup
+    const handleLogout = () => setUser(null);
+
 
   return (
     <Router>
@@ -64,8 +69,9 @@ export default function App() {
               />
 
               {/* Auth routes */}
-              <Route path="/login" element={<UserLogin />} />
-              <Route path="/register" element={<UserRegister />} />
+              <Route path="/login" element={<UserLogin onLogin={handleLogin}  />} />
+              <Route path="/register" element={<UserRegister  />} />
+              <Route path="/header" element={<Header />} />
             </Routes>
           </main>
         </div>
