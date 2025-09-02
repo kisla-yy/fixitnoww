@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const UserLogin = ({ onSwitch }) => {
+const UserLogin = ({ setIsAuthenticated }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -11,6 +12,14 @@ const UserLogin = ({ onSwitch }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Login Data:", formData);
+
+    // ✅ Dummy check (replace with real API auth later)
+    if (formData.email && formData.password) {
+      setIsAuthenticated(true); // ✅ update auth state
+      navigate("/user-dashboard"); // ✅ redirect after login
+    } else {
+      alert("Please enter valid credentials!");
+    }
   };
 
   return (
@@ -60,11 +69,11 @@ const UserLogin = ({ onSwitch }) => {
         </form>
 
         <p className="text-center text-sm mt-4">
-  Don’t have an account?{" "}
-  <Link to="/register" className="text-blue-500 hover:underline">
-    Register
-  </Link>
-</p>
+          Don’t have an account?{" "}
+          <Link to="/register" className="text-blue-500 hover:underline">
+            Register
+          </Link>
+        </p>
       </div>
     </div>
   );
