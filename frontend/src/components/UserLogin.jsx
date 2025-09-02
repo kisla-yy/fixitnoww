@@ -1,24 +1,45 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios"; // ✅ import axios
 
-const UserLogin = ({ setIsAuthenticated }) => {
+const UserLogin = ({ onLogin }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState([]);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login Data:", formData);
+    setErrors([]);
 
-    // ✅ Dummy check (replace with real API auth later)
-    if (formData.email && formData.password) {
-      setIsAuthenticated(true); // ✅ update auth state
-      navigate("/user-dashboard"); // ✅ redirect after login
-    } else {
-      alert("Please enter valid credentials!");
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/signin", // ✅ make sure this route exists
+        formData, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true, 
+      });
+
+      if (res.data?.user) {
+        onLogin(res.data.user); // update App.jsx state
+        navigate("/user-dashboard");
+      } else {
+        setErrors(["Server did not return a user object"]);
+      }
+    } catch (err) {
+      console.error("Login failed:", err); // ✅ check console for details
+
+      // Show meaningful error from backend if available
+      const payload =
+        err.response?.data?.errors ||
+        err.response?.data?.message ||
+        err.message ||
+        "Something went wrong";
+
+      setErrors(Array.isArray(payload) ? payload : [payload]);
     }
   };
 
@@ -28,6 +49,14 @@ const UserLogin = ({ setIsAuthenticated }) => {
         <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-6">
           User Login
         </h2>
+
+        {errors.length > 0 && (
+          <ul className="mb-4 text-red-600 list-disc list-inside">
+            {errors.map((err, idx) => (
+              <li key={idx}>{err}</li>
+            ))}
+          </ul>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
