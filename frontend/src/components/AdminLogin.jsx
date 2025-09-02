@@ -11,7 +11,8 @@ export default function AdminLogin({ setIsAuthenticated }) {
 
     // 🔐 Dummy authentication (replace with real API later)
     if (username === "admin" && password === "admin123") {
-      setIsAuthenticated(true); // mark admin as logged in
+
+       // mark admin as logged in
       navigate("/admin-dashboard"); // redirect to admin dashboard
     } else {
       alert("Invalid admin credentials. Try admin / admin123 for now.");
