@@ -25,7 +25,7 @@ export default function UserDashboard() {
   ]);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const handleRaiseComplaint = (e) => {
+  const handleRaiseComplaint = async (e) => {
     e.preventDefault();
     // ...create and add complaint...
     setIsFormOpen(false);
