@@ -1,12 +1,12 @@
-// model/user.js (ESM)
+// model/admin.js (ESM)
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
   firstname: { type: String, required: [true, "First name is required"] },
   lastname: { type: String },
   email: { type: String, required: [true, "Email is required"], unique: true },
   password: { type: String, required: [true, "Password is required"] },
 });
 
-const User = mongoose.model("users", userSchema);
-export default User; // default export
+const Admin = mongoose.model("admin", adminSchema);
+export default Admin; // default export

@@ -30,9 +30,9 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
 
   const handleLogout = async () => {
     try {
-      await axios.get("http://localhost:5000/signout", { withCredentials: true });
+      await axios.get("http://localhost:5000/userSignout", { withCredentials: true });
       setIsLoggedIn(false);
-      navigate("/login");
+      navigate("/welcome");
     } catch (err) {
       console.error("Logout failed:", err);
     }
