@@ -1,178 +1,101 @@
+// src/UserDashboard.jsx
 import React, { useState } from "react";
+import { Menu } from "lucide-react";
+import UserSidebar from "./UserSidebar";
+import HomeTab from "./HomeTab";
+import ComplaintsTab from "./ComplaintsTab";
+import {
+  NotificationsTab,
+  SettingsTab,
+  ProfileTab,
+  SearchTab,
+  HelpTab,
+  FeedbackTab,
+  NearbyTab,
+  AboutTab,
+  LogoutTab
+} from "./TabComponents";
 
 export default function UserDashboard() {
+  const [activeTab, setActiveTab] = useState("home");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [complaints, setComplaints] = useState([
     { id: 1, title: "Pothole near main road", status: "Pending" },
-    { id: 2, title: "Streetlight not working", status: "Resolved" },
+    { id: 2, title: "Streetlight not working", status: "Resolved" }
   ]);
-
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    description: "",
-    image: null,
-    voiceNote: null,
-    location: null, // {lat, lon}
-  });
-  const [loadingLocation, setLoadingLocation] = useState(false);
 
   const handleRaiseComplaint = async (e) => {
     e.preventDefault();
+    // ...create and add complaint...
+    setIsFormOpen(false);
+  };
 
-    if (!formData.description) {
-      alert("Please describe your issue");
-      return;
-    }
-
-    // Check if location already captured
-    if (!formData.location) {
-      setLoadingLocation(true);
-
-      return navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLoadingLocation(false);
-          const coords = {
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude,
-          };
-
-          // Save location and resubmit
-          const newComplaint = {
-            id: complaints.length + 1,
-            title: formData.description,
-            status: "Pending",
-            image: formData.image,
-            voiceNote: formData.voiceNote,
-            location: coords,
-          };
-
-          setComplaints([...complaints, newComplaint]);
-          setFormData({ description: "", image: null, voiceNote: null, location: null });
-          setIsFormOpen(false);
-        },
-        (err) => {
-          setLoadingLocation(false);
-          alert("Location permission is required to submit complaint.");
-        }
-      );
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case "home":
+        return <HomeTab setIsFormOpen={setIsFormOpen} />;
+      case "complaints":
+        return <ComplaintsTab complaints={complaints} setIsFormOpen={setIsFormOpen} />;
+      case "notifications":
+        return <NotificationsTab />;
+      case "settings":
+        return <SettingsTab />;
+      case "profile":
+        return <ProfileTab />;
+      case "search":
+        return <SearchTab />;
+      case "help":
+        return <HelpTab />;
+      case "feedback":
+        return <FeedbackTab />;
+      case "nearby":
+        return <NearbyTab />;
+      case "about":
+        return <AboutTab />;
+      case "logout":
+        return <LogoutTab />;
+      default:
+        return <HomeTab setIsFormOpen={setIsFormOpen} />;
     }
   };
 
   return (
-    <div className="flex flex-1">
+    <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-100 border-r p-4">
-        <h2 className="text-lg font-semibold mb-4">My Complaints</h2>
-        <ul className="space-y-2">
-          {complaints.map((c) => (
-            <li
-              key={c.id}
-              className="p-3 rounded-md bg-white shadow hover:shadow-md transition"
-            >
-              <p className="font-medium">{c.title}</p>
-              <p className="text-sm text-gray-500">Status: {c.status}</p>
-              {c.location && (
-                <p className="text-xs text-gray-400">
-                  📍 {c.location.lat.toFixed(4)}, {c.location.lon.toFixed(4)}
-                </p>
-              )}
-            </li>
-          ))}
-        </ul>
-      </aside>
+      <UserSidebar
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
 
-      {/* Main */}
-      <main className="flex-1 p-6">
-        <h1 className="text-2xl font-bold mb-6">User Dashboard</h1>
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center justify-between bg-violet-600 text-white p-4">
+          <h2 className="text-lg font-bold">Nagar Seva</h2>
+          <button onClick={() => setIsSidebarOpen(true)}>
+            <Menu size={28} />
+          </button>
+        </div>
 
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
-        >
-          Raise a Complaint
-        </button>
-
-        {/* Complaint Form Modal */}
-        {isFormOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
-              <h2 className="text-xl font-semibold mb-4">Raise a Complaint</h2>
-
-              <form onSubmit={handleRaiseComplaint} className="space-y-4">
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Describe your issue
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className="w-full p-2 border rounded-lg"
-                    placeholder="Write your complaint..."
-                    rows="3"
-                    required
-                  />
-                </div>
-
-                {/* Image Upload */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Upload / Take a Picture
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={(e) =>
-                      setFormData({ ...formData, image: e.target.files[0] })
-                    }
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Voice Note Upload */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Upload a Voice Note
-                  </label>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={(e) =>
-                      setFormData({ ...formData, voiceNote: e.target.files[0] })
-                    }
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Location Feedback */}
-                {loadingLocation && (
-                  <p className="text-sm text-blue-600">📍 Capturing your location...</p>
-                )}
-
-                {/* Buttons */}
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsFormOpen(false)}
-                    className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-                  >
-                    Submit Complaint
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        {/* Tab content */}
+        <div className="flex-1 overflow-hidden">
+          {renderActiveTab()}
+        </div>
       </main>
+
+      {/* Complaint Form Modal */}
+      {isFormOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            {/* form fields */}
+            <button onClick={() => setIsFormOpen(false)}>Cancel</button>
+            <button onClick={handleRaiseComplaint}>Submit Complaint</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

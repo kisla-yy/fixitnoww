@@ -23,9 +23,9 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
 
   // Run on mount and every 2 seconds to auto-update login status
   useEffect(() => {
-    checkSession(); // initial check
-    const interval = setInterval(checkSession, 2000); // poll every 2s
-    return () => clearInterval(interval); // cleanup
+    checkSession();
+    const interval = setInterval(checkSession, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = async () => {
@@ -39,17 +39,17 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white shadow-md">
+    <nav className="bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-md">
       <div className="container mx-auto px-6 py-3 flex justify-between items-center">
         <Link to="/" className="text-xl font-bold tracking-wide">
-          FixItNow
+          NagarSeva
         </Link>
 
         <div className="hidden md:flex space-x-6">
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
-              className="hover:text-gray-200 transition-colors duration-200"
+              className="hover:bg-white hover:bg-opacity-10 px-4 py-2 rounded-lg transition-all font-medium"
             >
               Logout
             </button>
@@ -57,13 +57,13 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
             <>
               <Link
                 to="/login"
-                className="hover:text-gray-200 transition-colors duration-200"
+                className="hover:bg-white hover:bg-opacity-10 px-4 py-2 rounded-lg transition-all font-medium"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className="bg-white text-indigo-600 px-4 py-1 rounded-lg font-medium hover:bg-gray-100 transition"
+                className="bg-white text-violet-700 px-4 py-2 rounded-lg font-semibold shadow-sm border-2 border-violet-100 hover:bg-violet-50 hover:text-violet-800 hover:border-violet-200 transition-all"
               >
                 Register
               </Link>
@@ -73,21 +73,21 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
 
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden focus:outline-none"
+          className="md:hidden p-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition"
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
       {isOpen && (
-        <div className="md:hidden bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 px-6 py-4 space-y-3">
+        <div className="md:hidden bg-gradient-to-r from-violet-700 to-purple-700 px-6 py-4 space-y-3">
           {isLoggedIn ? (
             <button
               onClick={() => {
                 handleLogout();
                 setIsOpen(false);
               }}
-              className="block hover:text-gray-200 transition-colors duration-200"
+              className="block w-full text-left px-4 py-2 hover:bg-white hover:bg-opacity-10 rounded-lg transition-all"
             >
               Logout
             </button>
@@ -95,14 +95,14 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
             <>
               <Link
                 to="/login"
-                className="block hover:text-gray-200 transition-colors duration-200"
+                className="block w-full px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all"
                 onClick={() => setIsOpen(false)}
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className="block bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition"
+                className="block w-full bg-white text-violet-700 px-4 py-2 rounded-lg font-semibold shadow-sm border-2 border-violet-100 hover:bg-violet-50 hover:text-violet-800 hover:border-violet-200 transition-all mt-1"
                 onClick={() => setIsOpen(false)}
               >
                 Register
