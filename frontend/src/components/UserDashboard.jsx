@@ -11,26 +11,50 @@ export default function UserDashboard() {
     description: "",
     image: null,
     voiceNote: null,
+    location: null, // {lat, lon}
   });
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
-  const handleRaiseComplaint = (e) => {
+  const handleRaiseComplaint = async (e) => {
     e.preventDefault();
+
     if (!formData.description) {
       alert("Please describe your issue");
       return;
     }
 
-    const newComplaint = {
-      id: complaints.length + 1,
-      title: formData.description,
-      status: "Pending",
-      image: formData.image,
-      voiceNote: formData.voiceNote,
-    };
+    // Check if location already captured
+    if (!formData.location) {
+      setLoadingLocation(true);
 
-    setComplaints([...complaints, newComplaint]);
-    setFormData({ description: "", image: null, voiceNote: null });
-    setIsFormOpen(false);
+      return navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLoadingLocation(false);
+          const coords = {
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+          };
+
+          // Save location and resubmit
+          const newComplaint = {
+            id: complaints.length + 1,
+            title: formData.description,
+            status: "Pending",
+            image: formData.image,
+            voiceNote: formData.voiceNote,
+            location: coords,
+          };
+
+          setComplaints([...complaints, newComplaint]);
+          setFormData({ description: "", image: null, voiceNote: null, location: null });
+          setIsFormOpen(false);
+        },
+        (err) => {
+          setLoadingLocation(false);
+          alert("Location permission is required to submit complaint.");
+        }
+      );
+    }
   };
 
   return (
@@ -46,6 +70,11 @@ export default function UserDashboard() {
             >
               <p className="font-medium">{c.title}</p>
               <p className="text-sm text-gray-500">Status: {c.status}</p>
+              {c.location && (
+                <p className="text-xs text-gray-400">
+                  📍 {c.location.lat.toFixed(4)}, {c.location.lon.toFixed(4)}
+                </p>
+              )}
             </li>
           ))}
         </ul>
@@ -95,7 +124,7 @@ export default function UserDashboard() {
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment" // opens camera on mobile
+                    capture="environment"
                     onChange={(e) =>
                       setFormData({ ...formData, image: e.target.files[0] })
                     }
@@ -117,6 +146,11 @@ export default function UserDashboard() {
                     className="w-full"
                   />
                 </div>
+
+                {/* Location Feedback */}
+                {loadingLocation && (
+                  <p className="text-sm text-blue-600">📍 Capturing your location...</p>
+                )}
 
                 {/* Buttons */}
                 <div className="flex justify-end gap-3">

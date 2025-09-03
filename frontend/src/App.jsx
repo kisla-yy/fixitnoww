@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 import Sidebar from "./components/Sidebar";
 import IssueList from "./components/IssueList";
@@ -16,25 +17,23 @@ import AdminDashboard from "./components/AdminDashboard";
 
 const CATEGORIES = ["All Issues", "Potholes", "Electric Lights"];
 
-function PrivateRoute({ isAuthenticated, children }) {
+// ✅ PrivateRoute with loading state
+function PrivateRoute({ isAuthenticated, loading, children }) {
+  if (loading) return <div>Loading...</div>; // or spinner
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
+// Layout
 function Layout({ children, isAuthenticated, setIsAuthenticated }) {
   const location = useLocation();
   const fullPageRoutes = ["/login", "/register", "/admin-login"];
   const isFullPage = fullPageRoutes.includes(location.pathname);
 
-  if (isFullPage) {
-    return <>{children}</>;
-  }
+  if (isFullPage) return <>{children}</>;
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar
-        isAuthenticated={isAuthenticated}
-        setIsAuthenticated={setIsAuthenticated}
-      />
+      <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
       <div className="flex-1 flex">{children}</div>
     </div>
   );
@@ -46,28 +45,45 @@ export default function App() {
   const showMapBtnRef = useRef(null);
 
   const [user, setUser] = useState(null); // null = not logged in
+  const [loading, setLoading] = useState(true); // ✅ loading state
   const isAuthenticated = !!user;
 
   const handleLogin = (userData) => setUser(userData);
   const handleLogout = () => setUser(null);
+  
+
+  // ✅ Session check on page load
+  useEffect(() => {
+    axios
+      .get("/auth/session-check", { withCredentials: true })
+      .then((res) => {
+        if (res.data.loggedIn) setUser(res.data.user);
+        else setUser(null);
+      })
+      .catch((err) => {
+        console.error("Session check error:", err);
+        setUser(null);
+      })
+      .finally(() => setLoading(false)); // ✅ finished checking session
+  }, []);
 
   return (
     <Router>
       <Layout isAuthenticated={isAuthenticated} setIsAuthenticated={setUser}>
         <Routes>
           <Route path="/" element={<Navigate to="/welcome" replace />} />
-
-          {/* Public Pages */}
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<UserLogin onLogin={handleLogin} />} />
           <Route path="/register" element={<UserRegister />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin-login" element={<AdminLogin onLogin={setUser} />} />
 
-          {/* Protected Routes */}
           <Route
             path="/user-dashboard"
             element={
-              <PrivateRoute isAuthenticated={isAuthenticated}>
+              <PrivateRoute
+                isAuthenticated={isAuthenticated}
+                loading={loading}
+              >
                 <UserDashboard />
               </PrivateRoute>
             }
@@ -75,13 +91,15 @@ export default function App() {
           <Route
             path="/admin-dashboard"
             element={
-              <PrivateRoute isAuthenticated={isAuthenticated} redirectTo="/admin-login">
+              <PrivateRoute
+                isAuthenticated={isAuthenticated}
+                loading={loading}
+              >
                 <AdminDashboard />
               </PrivateRoute>
             }
           />
 
-          {/* Issues Page */}
           <Route
             path="/issues"
             element={
@@ -99,7 +117,6 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-
                 <IssueList issues={mockIssues} activeCategory={activeCategory} />
               </div>
             }
