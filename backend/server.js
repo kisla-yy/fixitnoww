@@ -1,18 +1,40 @@
 // server.js
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Force-load .env from backend folder
+dotenv.config({ path: path.join(__dirname, ".env") });
+
+// Debug print
+console.log("DEBUG .env path:", path.join(__dirname, ".env"));
+console.log("DEBUG Cloudinary ENV:", {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET ? "✅ loaded" : "❌ missing",
+});
+
+
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import session from "express-session";
 import connectMongoDBSession from "connect-mongodb-session";
-import dotenv from "dotenv";
+import fetch from "node-fetch";   // 👈 Add this for proxying
 
+import cloudinary from "./config/cloudinary.js";
 import User from "./model/user.js";
 import authRouter from "./routes/authRouter.js";
 import classifyRouter from "./routes/classifyRouter.js";
 import { trainTextClassifier } from "./services/textClassifier.js";
 import { loadImageModel } from "./services/imageClassifier.js";
+import userRoutes from "./routes/userRoutes.js";
 
-dotenv.config();
+
+
 
 const app = express();
 
@@ -58,9 +80,41 @@ app.use((req, res, next) => {
   next();
 });
 
+// ✅ Proxy route for quotes
+app.get("/api/quotes/random", async (req, res) => {
+  try {
+    const response = await fetch("https://indian-quotes-api.vercel.app/api/quotes/random");
+    if (!response.ok) {
+      return res.status(response.status).json({ error: "Failed to fetch quotes" });
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching quotes:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/test-cloudinary", async (req, res) => {
+  try {
+    // Use a Cloudinary-hosted sample image
+    const result = await cloudinary.uploader.upload(
+      "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+      { folder: "sih_prototype" }
+    );
+
+    res.json(result);
+  } catch (err) {
+    console.error("Cloudinary test failed:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // Routes
-app.use(authRouter);
+app.use("/api/auth", authRouter);     // signup, signin, signout
 app.use("/api/classify", classifyRouter);
+app.use("/api", userRoutes); 
 
 // MongoDB connection + start server
 mongoose
