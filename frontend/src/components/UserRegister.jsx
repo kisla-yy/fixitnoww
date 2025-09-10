@@ -23,7 +23,7 @@ const UserRegister = () => {
   setErrors([]);
 
   try {
-    const res = await axios.post("http://localhost:5000/userSignup", formData, {
+    const res = await axios.post("http://localhost:5000/api/auth/userSignup", formData, {
       headers: { "Content-Type": "application/json" },
     });
 
