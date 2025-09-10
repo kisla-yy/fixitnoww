@@ -1,98 +1,85 @@
-// src/components/Sidebar.jsx
-import React, { useState } from 'react'
+import React, { useState } from "react";
+import { MapPin, List, Settings, ClipboardList, ChevronDown, User } from "lucide-react";
 
-export default function Sidebar({ categories = [], activeCategory, onChange }) {
-  const [mobileOpen, setMobileOpen] = useState(false)
-
-  const handleSelect = (cat) => {
-    onChange(cat)
-    setMobileOpen(false)
-  }
+export default function Sidebar({ activeTab, onChange, activeCategory, onCategoryChange, counts }) {
+  const [isIssueOpen, setIsIssueOpen] = useState(true);
+  const categories = ["All", "Electricity", "Transportation", "Accidents", "Potholes", "Road Blockage"];
 
   return (
-    <nav aria-label="Issue categories" className="sm:w-64 flex-shrink-0">
-      {/* Desktop sidebar */}
-      <div className="hidden sm:block h-full border-r bg-white">
-        <ul className="p-4 space-y-1">
-          {categories.map((cat) => {
-            const isActive = cat === activeCategory
-            return (
-              <li key={cat}>
+    <div className="w-64 bg-white shadow-lg flex flex-col">
+      <div className="p-4 text-xl font-bold border-b">Admin Dashboard</div>
+      <nav className="flex-1 p-2 space-y-2">
+        {/* Maps */}
+        <button
+          onClick={() => onChange("maps")}
+          className={`flex items-center w-full px-3 py-2 rounded-md ${
+            activeTab === "maps" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"
+          }`}
+        >
+          <MapPin className="mr-2 h-5 w-5" /> Maps
+        </button>
+
+        {/* All Issues */}
+        <div>
+          <button
+            onClick={() => { setIsIssueOpen(!isIssueOpen); onChange("all-issues"); }}
+            className="flex items-center justify-between w-full px-3 py-2 rounded-md hover:bg-gray-100"
+          >
+            <span className="flex items-center">
+              <List className="mr-2 h-5 w-5" /> All Issues
+            </span>
+            <ChevronDown className={`h-4 w-4 transform transition ${isIssueOpen ? "rotate-180" : ""}`} />
+          </button>
+          {isIssueOpen && (
+            <div className="ml-6 mt-1 space-y-1">
+              {categories.map((cat) => (
                 <button
-                  onClick={() => onChange(cat)}
-                  className={`w-full text-left px-3 py-2 rounded-md flex items-center justify-between ${
-                    isActive
-                      ? 'bg-indigo-50 border-l-4 border-indigo-500 font-medium'
-                      : 'hover:bg-gray-100'
+                  key={cat}
+                  onClick={() => { onChange("all-issues"); onCategoryChange(cat); }}
+                  className={`flex justify-between w-full text-left px-2 py-1 rounded-md text-sm ${
+                    activeTab === "all-issues" && activeCategory === cat
+                      ? "bg-blue-50 text-blue-600"
+                      : "hover:bg-gray-50"
                   }`}
-                  aria-current={isActive ? 'true' : undefined}
                 >
                   <span>{cat}</span>
+                  <span className="text-gray-500">({counts[cat] || 0})</span>
                 </button>
-              </li>
-            )
-          })}
-        </ul>
-      </div>
-
-      {/* Mobile top control */}
-      <div className="sm:hidden bg-white border-b px-4 py-3 flex items-center justify-between">
-        <div className="text-sm font-medium">{activeCategory}</div>
-        <button
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open categories"
-          className="p-2 rounded-md hover:bg-gray-100"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Mobile off-canvas */}
-      {mobileOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-40"
-        >
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setMobileOpen(false)}
-          />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white border-r p-4 overflow-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Categories</h3>
-              <button
-                onClick={() => setMobileOpen(false)}
-                aria-label="Close categories"
-                className="p-2 rounded-md hover:bg-gray-100"
-              >
-                ✕
-              </button>
+              ))}
             </div>
-
-            <ul className="space-y-2">
-              {categories.map((cat) => {
-                const isActive = cat === activeCategory
-                return (
-                  <li key={cat}>
-                    <button
-                      className={`w-full text-left px-3 py-2 rounded-md ${
-                        isActive ? 'bg-indigo-50 font-medium' : 'hover:bg-gray-100'
-                      }`}
-                      onClick={() => handleSelect(cat)}
-                      aria-current={isActive ? 'true' : undefined}
-                    >
-                      {cat}
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-          </aside>
+          )}
         </div>
-      )}
-    </nav>
-  )
+
+        {/* Manage Tasks */}
+        <button
+          onClick={() => onChange("manage-tasks")}
+          className={`flex items-center w-full px-3 py-2 rounded-md ${
+            activeTab === "manage-tasks" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"
+          }`}
+        >
+          <ClipboardList className="mr-2 h-5 w-5" /> Manage Tasks
+        </button>
+
+        {/* Settings */}
+        <button
+          onClick={() => onChange("settings")}
+          className={`flex items-center w-full px-3 py-2 rounded-md ${
+            activeTab === "settings" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"
+          }`}
+        >
+          <Settings className="mr-2 h-5 w-5" /> Settings
+        </button>
+
+        {/* Profile */}
+        <button
+          onClick={() => onChange("profile")}
+          className={`flex items-center w-full px-3 py-2 rounded-md ${
+            activeTab === "profile" ? "bg-blue-100 text-blue-700" : "hover:bg-gray-100"
+          }`}
+        >
+          <User className="mr-2 h-5 w-5" /> Profile
+        </button>
+      </nav>
+    </div>
+  );
 }

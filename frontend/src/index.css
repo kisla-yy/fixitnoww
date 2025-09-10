@@ -1,3 +1,83 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+/* Ensure Leaflet container has proper height
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Ensure all parent containers have height */
+/* html, body {
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+}
+
+/* Fix for Leaflet attribution */
+/* .leaflet-control-attribution {
+  font-size: 10px !important;
+} */ 
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: sans-serif;
+}
+
+.bg-gray-100 { background-color: #f3f4f6; }
+.bg-white { background-color: #ffffff; }
+
+/* Utility classes from Tailwind-like setup for simplicity */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-1 { flex: 1; }
+.h-screen { height: 100vh; }
+.h-full { height: 100%; }
+.w-full { width: 100%; }
+.w-64 { width: 16rem; }
+.p-4 { padding: 1rem; }
+.p-6 { padding: 1.5rem; }
+.mx-4 { margin-left: 1rem; margin-right: 1rem; }
+.space-y-2 > * + * { margin-top: 0.5rem; }
+.space-y-1 > * + * { margin-top: 0.25rem; }
+.border-b { border-bottom: 1px solid #e5e7eb; }
+.rounded-lg { border-radius: 0.5rem; }
+.shadow-lg { box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+.text-xl { font-size: 1.25rem; }
+.font-bold { font-weight: 700; }
+.hover\:bg-gray-100:hover { background-color: #f3f4f6; }
+.bg-blue-100 { background-color: #dbeafe; }
+.text-blue-700 { color: #1d4ed8; }
+.bg-blue-50 { background-color: #eff6ff; }
+.text-blue-600 { color: #2563eb; }
+.rounded-md { border-radius: 0.375rem; }
+.px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.text-sm { font-size: 0.875rem; }
+.text-gray-500 { color: #6b7280; }
+.transform { transform: rotate(0deg); }
+.transition { transition: transform 0.2s; }
+.rotate-180 { transform: rotate(180deg); }
+.fixed { position: fixed; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.z-50 { z-index: 50; }
+.items-end { align-items: flex-end; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.h-3\/4 { height: 75%; }
+.sm\:h-\[500px\] { height: 500px; }
+.overflow-hidden { overflow: hidden; }
+.overflow-y-auto { overflow-y: auto; }
+.bg-black\/40 { background-color: rgba(0,0,0,0.4); }

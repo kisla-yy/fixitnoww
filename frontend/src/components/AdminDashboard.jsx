@@ -1,87 +1,141 @@
-import React, { useState, useRef } from "react";
-import Header from "./Header";
-import IssueList from "./IssueList";
-import MapModal from "./MapModal";
+// src/components/AdminDashboard.jsx
+import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
+import IssueList from "./IssueList";
+import Settings from "./Settings";
+import ManageTasks from "./ManageTasks";
+import MapsTab from "./MapsTab";
+import Profile from "./Profile";
 
 export default function AdminDashboard() {
-  // Categories for Sidebar
-  const categories = ["All Issues", "Road", "Sanitation", "Electricity"];
+  const [activeTab, setActiveTab] = useState("all-issues");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [selectedIssue, setSelectedIssue] = useState(null);
 
-  // Dummy issues (replace with API later)
-  const [issues] = useState([
+  // Reset selectedIssue when user directly goes to All Issues
+  useEffect(() => {
+    if (activeTab === "all-issues") {
+      setSelectedIssue(null);
+    }
+  }, [activeTab]);
+
+  // Dummy issues
+  const issues = [
     {
       id: 1,
-      title: "Pothole near main street",
-      description: "Large pothole blocking the road.",
-      category: "Road",
-      reportedAt: new Date().toISOString(),
+      title: "Street light not working",
+      description: "Near park.",
+      category: "Electricity",
+      reportedAt: "2025-09-10T08:30:00Z",
+      lat: 28.6139,
+      lng: 77.209,
     },
     {
       id: 2,
-      title: "Garbage collection delayed",
-      description: "Garbage not collected in Sector 5 for 3 days.",
-      category: "Sanitation",
-      reportedAt: new Date().toISOString(),
+      title: "Bus breakdown",
+      description: "Sector 7.",
+      category: "Transportation",
+      reportedAt: "2025-09-09T15:45:00Z",
+      lat: 28.7041,
+      lng: 77.1025,
     },
     {
       id: 3,
-      title: "Street light not working",
-      description: "Street light out near park area.",
-      category: "Electricity",
-      reportedAt: new Date().toISOString(),
+      title: "Accident at junction",
+      description: "Main Junction.",
+      category: "Accidents",
+      reportedAt: "2025-09-08T12:10:00Z",
+      lat: 28.5355,
+      lng: 77.391,
     },
-  ]);
+    {
+      id: 4,
+      title: "Pothole near school",
+      description: "Blocking traffic.",
+      category: "Potholes",
+      reportedAt: "2025-09-07T09:00:00Z",
+      lat: 28.4595,
+      lng: 77.0266,
+    },
+    {
+      id: 5,
+      title: "Road Blockage",
+      description: "Tree fell down.",
+      category: "Road Blockage",
+      reportedAt: "2025-09-06T20:00:00Z",
+      lat: 28.4089,
+      lng: 77.3178,
+    },
+  ];
 
-  // Sidebar filter state
-  const [activeCategory, setActiveCategory] = useState("All Issues");
+  // Count by category
+  const counts = issues.reduce(
+    (acc, issue) => {
+      acc[issue.category] = (acc[issue.category] || 0) + 1;
+      acc.All = (acc.All || 0) + 1;
+      return acc;
+    },
+    { All: 0 }
+  );
 
-  // Map modal state + selected issue + triggerRef for focus restore
-  const [isMapOpen, setIsMapOpen] = useState(false);
-  const [selectedIssue, setSelectedIssue] = useState(null);
-  const triggerRef = useRef(null);
-
-  // Called from IssueList (issue, triggerElement)
-  const handleViewOnMap = (issue, triggerElement) => {
-    // save the element that opened the modal so focus can be restored
-    triggerRef.current = triggerElement || null;
-    setSelectedIssue(issue);
-    setIsMapOpen(true);
-  };
+  // Filtered issues
+  const filtered =
+    activeCategory === "All"
+      ? issues
+      : issues.filter((i) => i.category === activeCategory);
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <Sidebar
-        categories={categories}
-        activeCategory={activeCategory}
-        onChange={setActiveCategory}
-      />
+    <div className="flex h-screen w-screen overflow-hidden">
+      {/* Sidebar always visible */}
+      <div className="w-64 bg-white shadow-lg">
+        <Sidebar
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+          counts={counts}
+        />
+      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <Header />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col bg-gray-100">
+        {activeTab === "all-issues" && (
+          <div className="flex-1 overflow-y-auto p-6">
+            <IssueList
+              issues={filtered}
+              category={activeCategory}
+              count={counts[activeCategory]}
+              onView={(issue) => {
+                setSelectedIssue(issue);
+                setActiveTab("maps"); // go to maps
+              }}
+            />
+          </div>
+        )}
 
-        <div className="p-4 space-y-6">
-          {/* Issues List */}
-          <IssueList
-            issues={issues}
-            activeCategory={activeCategory}
-            onViewMap={handleViewOnMap}
-          />
+        {activeTab === "maps" && (
+          <div className="flex-1">
+            <MapsTab issues={issues} selectedIssue={selectedIssue} />
+          </div>
+        )}
 
-          {/* Map Modal */}
-          <MapModal
-            isOpen={isMapOpen}
-            onClose={() => {
-              setIsMapOpen(false);
-              setSelectedIssue(null);
-            }}
-            location={{ lat: 28.6139, lng: 77.2090 }}
-            triggerRef={triggerRef}
-            issue={selectedIssue}
-          />
-        </div>
+        {activeTab === "manage-tasks" && (
+          <div className="flex-1 overflow-y-auto p-6">
+            <ManageTasks />
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="flex-1 overflow-y-auto p-6">
+            <Settings />
+          </div>
+        )}
+
+        {activeTab === "profile" && (
+          <div className="flex-1 overflow-y-auto p-6">
+            <Profile />
+          </div>
+        )}
       </div>
     </div>
   );
