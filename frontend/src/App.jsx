@@ -14,16 +14,13 @@ import Welcome from "./components/Welcome";
 import AdminLogin from "./components/AdminLogin";
 import UserDashboard from "./components/UserDashboard";
 import AdminDashboard from "./components/AdminDashboard";
+import ComplaintsTab from "./components/ComplaintsTab";
 
-const CATEGORIES = ["All Issues", "Potholes", "Electric Lights"];
-
-// ✅ PrivateRoute with loading state
 function PrivateRoute({ isAuthenticated, loading, children }) {
-  if (loading) return <div>Loading...</div>; // or spinner
+  if (loading) return <div>Loading...</div>;
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
-// Layout
 function Layout({ children, isAuthenticated, setIsAuthenticated }) {
   const location = useLocation();
   const fullPageRoutes = ["/login", "/register", "/admin-login"];
@@ -39,32 +36,24 @@ function Layout({ children, isAuthenticated, setIsAuthenticated }) {
   );
 }
 
-export default function App() {
+function App() {
   const [activeCategory, setActiveCategory] = useState("All Issues");
   const [isMapOpen, setIsMapOpen] = useState(false);
   const showMapBtnRef = useRef(null);
 
-  const [user, setUser] = useState(null); // null = not logged in
-  const [loading, setLoading] = useState(true); // ✅ loading state
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const isAuthenticated = !!user;
 
-  const handleLogin = (userData) => setUser(userData);
-  const handleLogout = () => setUser(null);
-  
-
-  // ✅ Session check on page load
   useEffect(() => {
     axios
-      .get("/auth/session-check", { withCredentials: true })
+      .get("http://localhost:5000/api/auth/session-check", { withCredentials: true })
       .then((res) => {
         if (res.data.loggedIn) setUser(res.data.user);
         else setUser(null);
       })
-      .catch((err) => {
-        console.error("Session check error:", err);
-        setUser(null);
-      })
-      .finally(() => setLoading(false)); // ✅ finished checking session
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -73,17 +62,13 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/welcome" replace />} />
           <Route path="/welcome" element={<Welcome />} />
-          <Route path="/login" element={<UserLogin onLogin={handleLogin} />} />
+          <Route path="/login" element={<UserLogin onLogin={setUser} />} />
           <Route path="/register" element={<UserRegister />} />
           <Route path="/admin-login" element={<AdminLogin onLogin={setUser} />} />
-
           <Route
             path="/user-dashboard"
             element={
-              <PrivateRoute
-                isAuthenticated={isAuthenticated}
-                loading={loading}
-              >
+              <PrivateRoute isAuthenticated={isAuthenticated} loading={loading}>
                 <UserDashboard />
               </PrivateRoute>
             }
@@ -91,15 +76,11 @@ export default function App() {
           <Route
             path="/admin-dashboard"
             element={
-              <PrivateRoute
-                isAuthenticated={isAuthenticated}
-                loading={loading}
-              >
+              <PrivateRoute isAuthenticated={isAuthenticated} loading={loading}>
                 <AdminDashboard />
               </PrivateRoute>
             }
           />
-
           <Route
             path="/issues"
             element={
@@ -121,8 +102,8 @@ export default function App() {
               </div>
             }
           />
+          <Route path="/complaint-form" element={<ComplaintsTab />} />
         </Routes>
-
         <MapModal
           isOpen={isMapOpen}
           onClose={() => setIsMapOpen(false)}
@@ -132,3 +113,8 @@ export default function App() {
     </Router>
   );
 }
+
+export default App;
+
+
+

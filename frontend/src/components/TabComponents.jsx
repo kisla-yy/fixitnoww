@@ -43,38 +43,80 @@ export function SettingsTab() {
 }
 
 export function ProfileTab() {
+  const [profile, setProfile] = React.useState({ name: '', email: '' });
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    const ac = new AbortController();
+
+    async function loadProfile() {
+      try {
+        const res = await fetch('http://localhost:5000/api/me', {
+          method: 'GET',
+          credentials: 'include', // send cookies if using cookie-based auth
+          signal: ac.signal,
+          headers: { 'Accept': 'application/json' },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to load profile (${res.status})`);
+        }
+
+        const data = await res.json();
+        setProfile({ name: data?.name ?? '', email: data?.email ?? '' });
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          setError('Could not load profile');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProfile();
+    return () => ac.abort();
+  }, []);
+
   return (
     <div className="w-full h-full p-6">
       <div className="w-full">
         <h1 className="text-4xl font-bold mb-8 text-gray-800">Profile</h1>
+
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="flex items-center space-x-6 mb-8">
             <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
               <User size={40} className="text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-semibold text-gray-800">John Doe</h2>
+              <h2 className="text-2xl font-semibold text-gray-800">
+                {loading ? 'Loading…' : error ? '—' : profile.name || '—'}
+              </h2>
               <p className="text-gray-600">Registered Citizen</p>
             </div>
           </div>
+
           <div className="grid md:grid-cols-2 gap-6">
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+              <p className="text-gray-800">
+                {loading ? 'Loading…' : error ? '—' : profile.name || '—'}
+              </p>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <p className="text-gray-800">john.doe@example.com</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-              <p className="text-gray-800">+91 98765 43210</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-              <p className="text-gray-800">123 Main Street, City, State</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Member Since</label>
-              <p className="text-gray-800">January 2024</p>
+              <p className="text-gray-800">
+                {loading ? 'Loading…' : error ? '—' : profile.email || '—'}
+              </p>
             </div>
           </div>
+
+          {error && (
+            <p className="text-sm text-red-600 mt-6">
+              {error}
+            </p>
+          )}
         </div>
       </div>
     </div>
