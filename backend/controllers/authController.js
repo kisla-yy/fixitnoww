@@ -80,7 +80,7 @@ export const postsignin = async (req, res) => {
   await req.session.save();
   return res.json({
     message: "Login successful!",
-    user: { id: user._id, email: user.email },
+    user: { id: user._id, email: user.email, name: user.firstname},
   });
 };
 

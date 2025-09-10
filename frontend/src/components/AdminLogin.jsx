@@ -18,7 +18,7 @@ const AdminLogin = ({ onLogin }) => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/adminSignin", // backend route
+        "http://localhost:5000/api/auth/adminSignin", // backend route
         formData,
         {
           headers: { "Content-Type": "application/json" },
