@@ -1,9 +1,24 @@
-// src/components/MapModal.jsx
-import React, { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import React, { useEffect, useRef, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
-// ✅ Demo marker icon (fixes missing marker issue in Leaflet)
+// Component to invalidate map size after modal opens
+const MapInvalidator = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+    
+    return () => clearTimeout(timer);
+  }, [map]);
+
+  return null;
+};
+
+// Demo marker icon (fixes missing marker issue in Leaflet)
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
   iconSize: [25, 41],
@@ -15,6 +30,19 @@ const markerIcon = new L.Icon({
 
 export default function MapModal({ isOpen, onClose, location = { lat: 28.6139, lng: 77.209 }, title = "Issue Location" }) {
   const overlayRef = useRef(null);
+  const [showMap, setShowMap] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Delay map rendering to ensure modal is fully displayed
+      const timer = setTimeout(() => {
+        setShowMap(true);
+      }, 200);
+      return () => clearTimeout(timer);
+    } else {
+      setShowMap(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -43,20 +71,27 @@ export default function MapModal({ isOpen, onClose, location = { lat: 28.6139, l
           </button>
         </div>
 
-        <div className="h-full w-full">
-          <MapContainer
-            center={[location.lat, location.lng]}
-            zoom={15}
-            style={{ height: "100%", width: "100%" }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
-            />
-            <Marker position={[location.lat, location.lng]} icon={markerIcon}>
-              <Popup>{title}</Popup>
-            </Marker>
-          </MapContainer>
+        <div style={{ height: "calc(100% - 80px)", width: "100%" }}>
+          {showMap ? (
+            <MapContainer
+              center={[location.lat, location.lng]}
+              zoom={15}
+              style={{ height: "100%", width: "100%" }}
+            >
+              <MapInvalidator />
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+              />
+              <Marker position={[location.lat, location.lng]} icon={markerIcon}>
+                <Popup>{title}</Popup>
+              </Marker>
+            </MapContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-gray-500">Loading map...</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
