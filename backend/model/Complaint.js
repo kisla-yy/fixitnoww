@@ -7,13 +7,29 @@ const ComplaintSchema = new mongoose.Schema(
     confidence: { type: Number, required: true },
     textHints: { type: [String], default: [] },
     imageHints: { type: [String], default: [] },
-    imagePath: { type: String },   // ✅ will now store Cloudinary secure URL
+    
+    // ✅ Store Cloudinary URL here
+    imageUrl: { type: String },
+
     location: {
       lat: { type: Number },
-      lng: { type: Number }
-    }
+      lng: { type: Number },
+    },
+    status: {
+      type: String,
+      enum: ["pending", "in-progress", "fulfilled", "rejected"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );
+
+// Middleware: auto-update `updatedAt` on status change
+ComplaintSchema.pre("save", function (next) {
+  if (this.isModified("status")) {
+    this.updatedAt = Date.now();
+  }
+  next();
+});
 
 export default mongoose.model("Complaint", ComplaintSchema);

@@ -32,7 +32,7 @@ import classifyRouter from "./routes/classifyRouter.js";
 import { trainTextClassifier } from "./services/textClassifier.js";
 import { loadImageModel } from "./services/imageClassifier.js";
 import userRoutes from "./routes/userRoutes.js";
-
+import adminRouter from "./routes/adminRouter.js";
 
 
 
@@ -114,7 +114,8 @@ app.get("/test-cloudinary", async (req, res) => {
 // Routes
 app.use("/api/auth", authRouter);     // signup, signin, signout
 app.use("/api/classify", classifyRouter);
-app.use("/api", userRoutes); 
+app.use("/api", userRoutes);
+app.use("/api/admin", adminRouter); 
 
 // MongoDB connection + start server
 mongoose
