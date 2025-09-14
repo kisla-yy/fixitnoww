@@ -16,7 +16,6 @@ export default function AdminDashboard() {
     if (activeTab === "all-issues") setSelectedIssue(null);
   }, [activeTab]);
 
-  // Fetch complaints from backend
   useEffect(() => {
     const fetchComplaints = async () => {
       try {
@@ -43,37 +42,32 @@ export default function AdminDashboard() {
     fetchComplaints();
   }, []);
 
-// Update issue status
-const handleChangeStatus = async (issueId, newStatus) => {
-  try {
-    const res = await fetch(
-      `http://localhost:5000/api/admin/complaints/${issueId}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ status: newStatus }),
-      }
-    );
-    if (!res.ok) throw new Error("Failed to update status");
-    const updated = await res.json();
-
-    // ✅ If complaint is fulfilled, remove from list
-    if (updated.status === "fulfilled") {
-      setIssues((prev) => prev.filter((i) => i._id !== updated._id));
-    } else {
-      // Otherwise update it in place
-      setIssues((prev) =>
-        prev.map((i) => (i._id === updated._id ? updated : i))
+  const handleChangeStatus = async (issueId, newStatus) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/admin/complaints/${issueId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ status: newStatus }),
+        }
       );
+      if (!res.ok) throw new Error("Failed to update status");
+      const updated = await res.json();
+
+      if (updated.status === "fulfilled") {
+        setIssues((prev) => prev.filter((i) => i._id !== updated._id));
+      } else {
+        setIssues((prev) =>
+          prev.map((i) => (i._id === updated._id ? updated : i))
+        );
+      }
+    } catch (err) {
+      console.error("Error updating status:", err);
     }
-  } catch (err) {
-    console.error("Error updating status:", err);
-  }
-};
+  };
 
-
-  // Calculate counts dynamically
   const counts = issues.reduce(
     (acc, issue) => {
       const cat = issue.category || "Uncategorized";
@@ -84,15 +78,14 @@ const handleChangeStatus = async (issueId, newStatus) => {
     { All: 0 }
   );
 
-  // Filter issues by active category (case-insensitive)
   const filtered =
     activeCategory === "All"
       ? issues
       : issues.filter(
-        (i) =>
-          i.category &&
-          i.category.toLowerCase() === activeCategory.toLowerCase()
-      );
+          (i) =>
+            i.category &&
+            i.category.toLowerCase() === activeCategory.toLowerCase()
+        );
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -116,58 +109,87 @@ const handleChangeStatus = async (issueId, newStatus) => {
             ) : filtered.length === 0 ? (
               <p>No complaints in this category.</p>
             ) : (
-              filtered.map((issue) => (
-                <div
-                  key={issue._id}
-                  className="bg-white p-4 mb-3 shadow rounded flex justify-between items-center"
-                >
-                  <div>
-                    <h3 className="font-bold">{issue.text || issue.title}</h3>
-                    <p>Category: {issue.category}</p>
-                    <p>Status: {issue.status}</p>
-                    <p>
-                      Reported At:{" "}
-                      {issue.createdAt
-                        ? new Date(issue.createdAt).toLocaleString()
-                        : "N/A"}
-                    </p>
-
-                    {/* ✅ Show Cloudinary Image if available */}
-                    {issue.imagePath && (
+              <div className="space-y-4">
+                {filtered.map((issue) => (
+                  <div
+                    key={issue._id}
+                    className="bg-white p-4 rounded-xl shadow hover:shadow-lg transition flex items-start gap-4"
+                  >
+                    {/* Image */}
+                    {issue.imageUrl && (
                       <img
-                        src={issue.imagePath}
+                        src={issue.imageUrl}
                         alt="Complaint"
-                        className="mt-2 w-40 h-32 object-cover rounded border"
+                        className="w-40 h-32 object-cover rounded-md border flex-shrink-0"
                       />
                     )}
-                  </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      className="bg-blue-500 text-white px-3 py-1 rounded"
-                      onClick={() => {
-                        setSelectedIssue(issue);
-                        setActiveTab("maps");
-                      }}
-                    >
-                      View on Map
-                    </button>
-                    <button
-                      className="bg-green-500 text-white px-3 py-1 rounded"
-                      onClick={() =>
-                        handleChangeStatus(
-                          issue._id,
-                          issue.status === "pending" ? "fulfilled" : "pending"
-                        )
-                      }
-                    >
-                      {issue.status === "pending"
-                        ? "Mark Fulfilled"
-                        : "Mark Pending"}
-                    </button>
+                    {/* Info & buttons */}
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg mb-1">
+                          {issue.text || issue.title}
+                        </h3>
+
+                        {/* Badges */}
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                            {issue.category}
+                          </span>
+                          <span
+                            className={`text-xs font-medium px-2 py-1 rounded-full ${
+                              issue.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : issue.status === "fulfilled"
+                                ? "bg-green-100 text-green-800"
+                                : issue.status === "in-progress"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {issue.status}
+                          </span>
+                        </div>
+
+                        <p className="text-gray-500 text-sm mb-2">
+                          Reported At:{" "}
+                          {issue.createdAt
+                            ? new Date(issue.createdAt).toLocaleString()
+                            : "N/A"}
+                        </p>
+                      </div>
+
+                      {/* Buttons */}
+                      <div className="flex gap-4 mt-1">
+                        <button
+                          className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-md hover:bg-blue-600 transition"
+                          onClick={() => {
+                            setSelectedIssue(issue);
+                            setActiveTab("maps");
+                          }}
+                        >
+                          View on Map
+                        </button>
+                        <button
+                          className="flex-1 bg-green-500 text-white px-1 py-1 rounded-md hover:bg-green-600 transition"
+                          onClick={() =>
+                            handleChangeStatus(
+                              issue._id,
+                              issue.status === "pending"
+                                ? "fulfilled"
+                                : "pending"
+                            )
+                          }
+                        >
+                          {issue.status === "pending"
+                            ? "Mark Fulfilled"
+                            : "Mark Pending"}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         )}
