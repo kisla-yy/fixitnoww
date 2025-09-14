@@ -3,45 +3,63 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+// Fix default Leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Helper: focus map on selected issue
+// Fly to issue only if coordinates are valid
 function FlyToIssue({ issue }) {
   const map = useMap();
   const popupRef = useRef(null);
 
   useEffect(() => {
-    if (issue) {
-      // Fly to issue
-      map.flyTo([issue.lat, issue.lng], 14, { animate: true });
-      // Open popup after animation delay
-      setTimeout(() => {
-        if (popupRef.current) {
-          popupRef.current.openOn(map);
-        }
-      }, 800);
-    }
+    if (!issue || !issue.lat || !issue.lng) return;
+
+    const lat = Number(issue.lat);
+    const lng = Number(issue.lng);
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    map.flyTo([lat, lng], 14, { animate: true });
+
+    setTimeout(() => {
+      if (popupRef.current) popupRef.current.openOn(map);
+    }, 800);
   }, [issue, map]);
 
+  if (!issue || !issue.lat || !issue.lng) return null;
+
+  const lat = Number(issue.lat);
+  const lng = Number(issue.lng);
+  if (isNaN(lat) || isNaN(lng)) return null;
+
   return (
-    issue && (
-      <Marker position={[issue.lat, issue.lng]}>
-        <Popup ref={popupRef}>
-          <strong>{issue.title}</strong>
-          <br />
-          {issue.description}
-        </Popup>
-      </Marker>
-    )
+    <Marker key={issue._id} position={[lat, lng]}>
+      <Popup ref={popupRef}>
+        <strong>{issue.title}</strong>
+        <br />
+        {issue.description}
+      </Popup>
+    </Marker>
   );
 }
 
 export default function MapsTab({ issues, selectedIssue }) {
+  // Only show markers with valid coordinates
+  const validIssues = issues.filter(
+    (i) =>
+      i.lat != null &&
+      i.lng != null &&
+      !isNaN(Number(i.lat)) &&
+      !isNaN(Number(i.lng))
+  );
+
   return (
     <div className="w-full h-full">
       <MapContainer
@@ -54,9 +72,8 @@ export default function MapsTab({ issues, selectedIssue }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Show all issues */}
-        {issues.map((issue) => (
-          <Marker key={issue.id} position={[issue.lat, issue.lng]}>
+        {validIssues.map((issue) => (
+          <Marker key={issue._id} position={[Number(issue.lat), Number(issue.lng)]}>
             <Popup>
               <strong>{issue.title}</strong>
               <br />
@@ -65,8 +82,15 @@ export default function MapsTab({ issues, selectedIssue }) {
           </Marker>
         ))}
 
-        {/* If one issue is selected → focus on it */}
-        {selectedIssue && <FlyToIssue issue={selectedIssue} />}
+        {selectedIssue && (
+          <FlyToIssue
+            issue={
+              selectedIssue.lat != null && selectedIssue.lng != null
+                ? selectedIssue
+                : null
+            }
+          />
+        )}
       </MapContainer>
     </div>
   );

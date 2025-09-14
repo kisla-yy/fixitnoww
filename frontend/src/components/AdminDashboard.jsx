@@ -1,92 +1,102 @@
-// src/components/AdminDashboard.jsx
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
-import IssueList from "./IssueList";
+import MapsTab from "./MapsTab";
 import Settings from "./Settings";
 import ManageTasks from "./ManageTasks";
-import MapsTab from "./MapsTab";
 import Profile from "./Profile";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("all-issues");
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedIssue, setSelectedIssue] = useState(null);
+  const [issues, setIssues] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Reset selectedIssue when user directly goes to All Issues
   useEffect(() => {
-    if (activeTab === "all-issues") {
-      setSelectedIssue(null);
-    }
+    if (activeTab === "all-issues") setSelectedIssue(null);
   }, [activeTab]);
 
-  // Dummy issues
-  const issues = [
-    {
-      id: 1,
-      title: "Street light not working",
-      description: "Near park.",
-      category: "Electricity",
-      reportedAt: "2025-09-10T08:30:00Z",
-      lat: 28.6139,
-      lng: 77.209,
-    },
-    {
-      id: 2,
-      title: "Bus breakdown",
-      description: "Sector 7.",
-      category: "Transportation",
-      reportedAt: "2025-09-09T15:45:00Z",
-      lat: 28.7041,
-      lng: 77.1025,
-    },
-    {
-      id: 3,
-      title: "Accident at junction",
-      description: "Main Junction.",
-      category: "Accidents",
-      reportedAt: "2025-09-08T12:10:00Z",
-      lat: 28.5355,
-      lng: 77.391,
-    },
-    {
-      id: 4,
-      title: "Pothole near school",
-      description: "Blocking traffic.",
-      category: "Potholes",
-      reportedAt: "2025-09-07T09:00:00Z",
-      lat: 28.4595,
-      lng: 77.0266,
-    },
-    {
-      id: 5,
-      title: "Road Blockage",
-      description: "Tree fell down.",
-      category: "Road Blockage",
-      reportedAt: "2025-09-06T20:00:00Z",
-      lat: 28.4089,
-      lng: 77.3178,
-    },
-  ];
+  // Fetch complaints from backend
+  useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/admin/complaints", {
+          credentials: "include",
+        });
+        const data = await res.json();
 
-  // Count by category
+        const normalized = data.map((issue) => ({
+          ...issue,
+          lat: issue.location?.lat ?? null,
+          lng: issue.location?.lng ?? null,
+          category: issue.category ? issue.category.trim() : "Uncategorized",
+          status: issue.status || "pending",
+        }));
+
+        setIssues(normalized);
+      } catch (err) {
+        console.error("Error fetching complaints:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchComplaints();
+  }, []);
+
+// Update issue status
+const handleChangeStatus = async (issueId, newStatus) => {
+  try {
+    const res = await fetch(
+      `http://localhost:5000/api/admin/complaints/${issueId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: newStatus }),
+      }
+    );
+    if (!res.ok) throw new Error("Failed to update status");
+    const updated = await res.json();
+
+    // ✅ If complaint is fulfilled, remove from list
+    if (updated.status === "fulfilled") {
+      setIssues((prev) => prev.filter((i) => i._id !== updated._id));
+    } else {
+      // Otherwise update it in place
+      setIssues((prev) =>
+        prev.map((i) => (i._id === updated._id ? updated : i))
+      );
+    }
+  } catch (err) {
+    console.error("Error updating status:", err);
+  }
+};
+
+
+  // Calculate counts dynamically
   const counts = issues.reduce(
     (acc, issue) => {
-      acc[issue.category] = (acc[issue.category] || 0) + 1;
+      const cat = issue.category || "Uncategorized";
+      acc[cat] = (acc[cat] || 0) + 1;
       acc.All = (acc.All || 0) + 1;
       return acc;
     },
     { All: 0 }
   );
 
-  // Filtered issues
+  // Filter issues by active category (case-insensitive)
   const filtered =
     activeCategory === "All"
       ? issues
-      : issues.filter((i) => i.category === activeCategory);
+      : issues.filter(
+        (i) =>
+          i.category &&
+          i.category.toLowerCase() === activeCategory.toLowerCase()
+      );
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      {/* Sidebar always visible */}
+      {/* Sidebar */}
       <div className="w-64 bg-white shadow-lg">
         <Sidebar
           activeTab={activeTab}
@@ -97,25 +107,77 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <div className="flex-1 flex flex-col bg-gray-100">
         {activeTab === "all-issues" && (
           <div className="flex-1 overflow-y-auto p-6">
-            <IssueList
-              issues={filtered}
-              category={activeCategory}
-              count={counts[activeCategory]}
-              onView={(issue) => {
-                setSelectedIssue(issue);
-                setActiveTab("maps"); // go to maps
-              }}
-            />
+            {loading ? (
+              <p>Loading complaints...</p>
+            ) : filtered.length === 0 ? (
+              <p>No complaints in this category.</p>
+            ) : (
+              filtered.map((issue) => (
+                <div
+                  key={issue._id}
+                  className="bg-white p-4 mb-3 shadow rounded flex justify-between items-center"
+                >
+                  <div>
+                    <h3 className="font-bold">{issue.text || issue.title}</h3>
+                    <p>Category: {issue.category}</p>
+                    <p>Status: {issue.status}</p>
+                    <p>
+                      Reported At:{" "}
+                      {issue.createdAt
+                        ? new Date(issue.createdAt).toLocaleString()
+                        : "N/A"}
+                    </p>
+
+                    {/* ✅ Show Cloudinary Image if available */}
+                    {issue.imagePath && (
+                      <img
+                        src={issue.imagePath}
+                        alt="Complaint"
+                        className="mt-2 w-40 h-32 object-cover rounded border"
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      className="bg-blue-500 text-white px-3 py-1 rounded"
+                      onClick={() => {
+                        setSelectedIssue(issue);
+                        setActiveTab("maps");
+                      }}
+                    >
+                      View on Map
+                    </button>
+                    <button
+                      className="bg-green-500 text-white px-3 py-1 rounded"
+                      onClick={() =>
+                        handleChangeStatus(
+                          issue._id,
+                          issue.status === "pending" ? "fulfilled" : "pending"
+                        )
+                      }
+                    >
+                      {issue.status === "pending"
+                        ? "Mark Fulfilled"
+                        : "Mark Pending"}
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 
         {activeTab === "maps" && (
           <div className="flex-1">
-            <MapsTab issues={issues} selectedIssue={selectedIssue} />
+            <MapsTab
+              issues={issues.filter((i) => i.lat !== null && i.lng !== null)}
+              selectedIssue={selectedIssue}
+            />
           </div>
         )}
 
