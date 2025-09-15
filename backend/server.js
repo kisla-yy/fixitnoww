@@ -1,6 +1,7 @@
 // server.js
 import dotenv from "dotenv";
 import express from "express";
+
 import { fileURLToPath } from "url";
 import path from "path";
 import cors from "cors";
@@ -133,6 +134,13 @@ app.use("/api/classify", classifyRouter);
 app.use("/api", userRoutes);
 app.use("/api/admin", adminRouter);
 app.use("/api/chat", chatRoute);   // 👈 AI Chatbot route mounted
+
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// Fallback for any unmatched route: serve React index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+});
 
 // MongoDB connection + start server
 mongoose
