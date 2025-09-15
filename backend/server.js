@@ -44,7 +44,25 @@ const store = new MongoDBStore({ uri: DB_PATH, collection: "sessions" });
 
 // Middleware
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://fixitnow-beta.vercel.app",   // your deployed frontend
+  "https://fixitnoww.netlify.app"       // if you deploy on Netlify
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
 app.use(
   session({
