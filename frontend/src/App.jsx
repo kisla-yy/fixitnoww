@@ -47,7 +47,7 @@ function App() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/auth/session-check", { withCredentials: true })
+      .get("https://fixitnoww-production.up.railway.app/api/auth/session-check", { withCredentials: true })
       .then((res) => {
         if (res.data.loggedIn) setUser(res.data.user);
         else setUser(null);
