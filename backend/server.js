@@ -1,29 +1,13 @@
 // server.js
 import dotenv from "dotenv";
+import express from "express";
 import { fileURLToPath } from "url";
 import path from "path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Force-load .env from backend folder
-dotenv.config({ path: path.join(__dirname, ".env") });
-
-// Debug print
-console.log("DEBUG .env path:", path.join(__dirname, ".env"));
-console.log("DEBUG Cloudinary ENV:", {
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET ? "✅ loaded" : "❌ missing",
-});
-
-
-import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import session from "express-session";
 import connectMongoDBSession from "connect-mongodb-session";
-import fetch from "node-fetch";   // 👈 Add this for proxying
+import fetch from "node-fetch";   // 👈 for quotes API & chatbot proxy
 
 import cloudinary from "./config/cloudinary.js";
 import User from "./model/user.js";
@@ -33,8 +17,23 @@ import { trainTextClassifier } from "./services/textClassifier.js";
 import { loadImageModel } from "./services/imageClassifier.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRouter from "./routes/adminRouter.js";
+import chatRoute from "./routes/chatRoute.js";   // 👈 NEW CHAT ROUTE
 
+// Path setup for .env
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// Force-load .env from backend folder
+dotenv.config({ path: path.join(__dirname, ".env") });
+
+// Debug print
+console.log("DEBUG .env path:", path.join(__dirname, ".env"));
+console.log("DEBUG ENV check:", {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET ? "✅ loaded" : "❌ missing",
+  openai: process.env.OPENAI_API_KEY ? "✅ loaded" : "❌ missing",   // 👈 check OpenAI
+});
 
 const app = express();
 
@@ -80,7 +79,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Proxy route for quotes
+// ✅ Quotes Proxy
 app.get("/api/quotes/random", async (req, res) => {
   try {
     const response = await fetch("https://indian-quotes-api.vercel.app/api/quotes/random");
@@ -95,14 +94,13 @@ app.get("/api/quotes/random", async (req, res) => {
   }
 });
 
+// ✅ Cloudinary Test
 app.get("/test-cloudinary", async (req, res) => {
   try {
-    // Use a Cloudinary-hosted sample image
     const result = await cloudinary.uploader.upload(
       "https://res.cloudinary.com/demo/image/upload/sample.jpg",
       { folder: "sih_prototype" }
     );
-
     res.json(result);
   } catch (err) {
     console.error("Cloudinary test failed:", err);
@@ -110,12 +108,12 @@ app.get("/test-cloudinary", async (req, res) => {
   }
 });
 
-
 // Routes
-app.use("/api/auth", authRouter);     // signup, signin, signout
+app.use("/api/auth", authRouter);
 app.use("/api/classify", classifyRouter);
 app.use("/api", userRoutes);
-app.use("/api/admin", adminRouter); 
+app.use("/api/admin", adminRouter);
+app.use("/api/chat", chatRoute);   // 👈 AI Chatbot route mounted
 
 // MongoDB connection + start server
 mongoose
