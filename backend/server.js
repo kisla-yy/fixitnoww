@@ -48,6 +48,7 @@ app.use(express.json());
 const allowedOrigins = [
   "http://localhost:5173",
   "https://fixitnow-beta.vercel.app",   // your deployed frontend
+  "https://fixitnow-kislay-kaushals-projects.vercel.app",   // your deployed frontend
   "https://fixitnoww.netlify.app"       // if you deploy on Netlify
 ];
 
