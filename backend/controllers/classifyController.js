@@ -1,5 +1,5 @@
 import { classifyMultimodal } from "../services/multimodal.js";
-import Complaint from "../model/complaint.js";
+import Complaint from "../model/Complaint.js";
 
 export async function handleClassify(req, res) {
   try {
