@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   const handleChangeStatus = async (issueId, newStatus) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/admin/complaints/${issueId}`,
+        `https://fixitnoww-production.up.railway.app/api/admin/complaints/${issueId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
