@@ -4,6 +4,7 @@ import MapsTab from "./MapsTab";
 import Settings from "./Settings";
 import ManageTasks from "./ManageTasks";
 import Profile from "./Profile";
+import ChatBot from "./ChatBot"; // ✅ import ChatBot
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("all-issues");
@@ -88,7 +89,7 @@ export default function AdminDashboard() {
         );
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden relative">
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-lg">
         <Sidebar
@@ -220,6 +221,24 @@ export default function AdminDashboard() {
             <Profile />
           </div>
         )}
+      </div>
+
+      {/* ✅ Floating ChatBot */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <div className="relative group">
+          {/* Pulsing background */}
+          <div className="absolute inset-0 rounded-full bg-blue-500 opacity-30 group-hover:opacity-40 animate-ping"></div>
+
+          {/* Chat Button */}
+          <button className="relative flex items-center justify-center w-14 h-14 rounded-full bg-blue-600 shadow-lg hover:scale-110 transition-transform duration-300">
+            💬
+          </button>
+
+          {/* Chatbot Box */}
+          <div className="absolute bottom-16 right-0 hidden group-hover:block">
+            <ChatBot />
+          </div>
+        </div>
       </div>
     </div>
   );
