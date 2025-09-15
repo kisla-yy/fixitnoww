@@ -11,7 +11,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
   // Check session from backend
   const checkSession = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/session-check", {
+      const res = await axios.get("https://fixitnoww-production.up.railway.app/api/session-check", {
         withCredentials: true,
       });
       setIsLoggedIn(res.data.loggedIn);
@@ -30,7 +30,7 @@ function Navbar({ isAuthenticated, setIsAuthenticated }) {
 
   const handleLogout = async () => {
     try {
-      await axios.get("http://localhost:5000/api/auth/userSignout", { withCredentials: true });
+      await axios.get("https://fixitnoww-production.up.railway.app/api/auth/userSignout", { withCredentials: true });
       setIsLoggedIn(false);
       navigate("/welcome");
     } catch (err) {
