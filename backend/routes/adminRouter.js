@@ -1,5 +1,5 @@
 import express from "express";
-import Complaint from "../model/complaint.js";
+import Complaint from "../model/Complaint.js";
 
 const router = express.Router();
 
